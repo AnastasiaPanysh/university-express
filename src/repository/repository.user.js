@@ -7,11 +7,11 @@ async function getUsersDB() {
     return data
 }
 
-async function getUsersByIdDB(id) {
+async function getUsersByIdDB(user_id) {
     const client = await pool.connect()
     const sql = `SELECT users.name, users.surname, users_info.birth,users_info.city,users_info.age
      FROM users JOIN users_info ON users.info_id=users_info.id WHERE users.id=$1`
-    const data = (await client.query(sql, [id])).rows
+    const data = (await client.query(sql, [user_id])).rows
     return data
 }
 
@@ -44,22 +44,22 @@ async function createUsersDB(name, surname, birth, city, age) {
     }
 }
 
-async function updateUsersDB(id, name, surname, birth, city, age) {
+async function updateUsersDB(info_id, name, surname, birth, city, age) {
     const client = await pool.connect()
     try {
         await client.query('BEGIN')
 
         const sql = ` UPDATE users_info SET birth=$1, city=$2, age=$3 WHERE id=$4`
-        await client.query(sql, [birth, city, age, id])
+        await client.query(sql, [birth, city, age, info_id])
 
         const sql2 = `UPDATE users SET name=$1, surname=$2 where id=$3`
-        await client.query(sql2, [name, surname, id])
+        await client.query(sql2, [name, surname, info_id])
 
         const sql3 = `SELECT users.name, users.surname, users_info.birth, users_info.city, users_info.age 
         FROM users
         JOIN users_info ON users.info_id = users_info.id
         WHERE  users.info_id =$1 `
-        const data = (await client.query(sql3, [id])).rows
+        const data = (await client.query(sql3, [info_id])).rows
 
         await client.query('COMMIT')
         return data
@@ -71,16 +71,16 @@ async function updateUsersDB(id, name, surname, birth, city, age) {
 
 }
 
-async function deleteUsersDB(id) {
+async function deleteUsersDB(info_id) {
     const client = await pool.connect()
     try {
         await client.query('BEGIN')
 
         const sql = `DELETE FROM users WHERE id=$1`
-        await client.query(sql, [id])
+        await client.query(sql, [info_id])
 
         const sql2 = `DELETE FROM users_info WHERE id=$1 RETURNING *`
-        const data = (await client.query(sql2, [id])).rows
+        const data = (await client.query(sql2, [info_id])).rows
         console.log(data);
         await client.query('COMMIT')
         return data
